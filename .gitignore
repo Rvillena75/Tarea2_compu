@@ -1,0 +1,32 @@
+# Local editor/agent state
+.agents/
+.codex/
+
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+*.pyo
+*.nbc
+*.nbi
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Dependencies installed locally with pip --target
+src/python_deps/
+
+# User/tool caches
+src/.matplotlib_cache/
+
+# C/C++ build outputs
+*.o
+src/serial
+src/serial_pt
+src/omp_pt
+src/omp_pt_sched
+
+# Generated experiment artifacts
+src/results/
+src/*.ppm
+src/output*.ppm
