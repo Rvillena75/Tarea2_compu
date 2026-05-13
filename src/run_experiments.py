@@ -630,11 +630,14 @@ def maybe_pdf(report: Path) -> None:
         print("Aviso: pandoc no esta disponible; se omite PDF.", file=sys.stderr)
         return
     pdf = report.with_suffix(".pdf")
-    subprocess.run(
-        ["pandoc", str(report), "-o", str(pdf), "--pdf-engine=pdflatex"],
-        cwd=report.parent,
-        check=True,
-    )
+    try:
+        subprocess.run(
+            ["pandoc", report.name, "-o", pdf.name, "--pdf-engine=pdflatex"],
+            cwd=report.parent,
+            check=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError) as exc:
+        print(f"Aviso: no se pudo generar PDF con pandoc/pdflatex: {exc}", file=sys.stderr)
 
 
 def main() -> int:

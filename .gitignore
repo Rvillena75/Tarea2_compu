@@ -27,6 +27,15 @@ src/omp_pt
 src/omp_pt_sched
 
 # Generated experiment artifacts
+results/*
+!results/README.md
+!results/final/
+!results/final/**
 src/results/
 src/*.ppm
 src/output*.ppm
+slurm-*.out
+slurm-*.err
+src/slurm-*.out
+src/slurm-*.err
+src/py_local_dir/
