@@ -1,6 +1,8 @@
 # Local editor/agent state
 .agents/
 .codex/
+.claude/
+CLAUDE.md
 
 # Python caches and local environments
 __pycache__/

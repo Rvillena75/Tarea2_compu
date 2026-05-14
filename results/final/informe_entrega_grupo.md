@@ -1,12 +1,24 @@
 ---
 title: "Tarea 2: Path Tracing con OpenMP y Numba"
-geometry: margin=1.5cm
-fontsize: 10pt
+geometry: margin=1.2cm
+fontsize: 9pt
+header-includes:
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+  - \setlength{\tabcolsep}{2pt}
+  - \renewcommand{\arraystretch}{1.05}
+  - \setlength{\emergencystretch}{3em}
+  - \tolerance=1000
+  - \hbadness=10000
 ---
 
 ## Declaracion de uso de IA
 
-Se uso un asistente de IA para revisar la pauta y clases, implementar las versiones OpenMP y Numba, automatizar experimentos, revisar cobertura de resultados y generar este informe. Los resultados numericos provienen de `results/final/local/results.csv` y `results/final/cluster/results.csv`. Se deja una seccion preparada para incorporar un computador adicional de otro integrante del grupo.
+Se uso un asistente de IA para revisar la pauta y clases, implementar las versiones OpenMP y Numba, automatizar experimentos, revisar cobertura de resultados y generar este informe. Los resultados numericos provienen de las tres corridas siguientes:
+
+- `results/final/local/results.csv` (computador Local del grupo).
+- `results/final/cluster/results.csv` (cluster IALab).
+- `results/final/grupo/results.csv` (computador del integrante adicional del grupo). La carpeta `results/final/grupo/` espeja la corrida original `results/full_grupo_jeanf_20260514_105212/`.
 
 ## Entorno de ejecucion
 
@@ -14,7 +26,7 @@ Se uso un asistente de IA para revisar la pauta y clases, implementar las versio
 | ---------------- | ------------------------------------------- | ------------- | --------------- | ------------ | ------------ |
 | Local            | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz    | 6             | 12              | 2            | No informado |
 | Cluster          | Intel(R) Xeon(R) Silver 4210R CPU @ 2.40GHz | 20            | 40              | 2            | 3200.0000    |
-| Computador grupo | Pendiente                                   | Pendiente     | Pendiente       | Pendiente    | Pendiente    |
+| Computador grupo | Intel(R) Core(TM) i5-10600K CPU @ 4.10GHz   | 6             | 12              | 2            | 4100 (base)  |
 
 ## Cobertura de resultados
 
@@ -24,7 +36,7 @@ Las corridas Local y Cluster corresponden a la matriz completa con `--full --rep
 | ---------------- | --------- | --------- | ---------- | ----------- | ---------- |
 | Local            | 148       | 12        | 88         | 24          | 24         |
 | Cluster          | 148       | 12        | 88         | 24          | 24         |
-| Computador grupo | Pendiente | Pendiente | Pendiente  | Pendiente   | Pendiente  |
+| Computador grupo | 148       | 12        | 88         | 24          | 24         |
 
 ## Configuraciones
 
@@ -46,14 +58,14 @@ Las corridas Local y Cluster corresponden a la matriz completa con `--full --rep
 
 El cociente es `Cluster/Local`; valores mayores a 1 indican que el cluster demoro mas que el equipo local.
 
-| Escena         | Config. | Local Ts | Cluster Ts | Cluster/Local | Grupo Ts  |
-| -------------- | ------- | -------- | ---------- | ------------- | --------- |
-| scene.txt      | small   | 4.075    | 6.443      | 1.58x         | Pendiente |
-| scene.txt      | medium  | 64.690   | 100.985    | 1.56x         | Pendiente |
-| scene.txt      | large   | 533.884  | 811.762    | 1.52x         | Pendiente |
-| scene_many.txt | small   | 6.177    | 11.424     | 1.85x         | Pendiente |
-| scene_many.txt | medium  | 98.010   | 175.809    | 1.79x         | Pendiente |
-| scene_many.txt | large   | 782.014  | 1406.140   | 1.80x         | Pendiente |
+| Escena         | Config. | Local Ts | Cluster Ts | Grupo Ts | Cluster/Local | Grupo/Local |
+| -------------- | ------- | -------- | ---------- | -------- | ------------- | ----------- |
+| scene.txt      | small   | 4.075    | 6.443      | 5.025    | 1.58x         | 1.23x       |
+| scene.txt      | medium  | 64.690   | 100.985    | 73.510   | 1.56x         | 1.14x       |
+| scene.txt      | large   | 533.884  | 811.762    | 621.377  | 1.52x         | 1.16x       |
+| scene_many.txt | small   | 6.177    | 11.424     | 7.216    | 1.85x         | 1.17x       |
+| scene_many.txt | medium  | 98.010   | 175.809    | 121.263  | 1.79x         | 1.24x       |
+| scene_many.txt | large   | 782.014  | 1406.140   | 926.600  | 1.80x         | 1.18x       |
 
 ### Local: serial.cpp vs serial_pt.cpp
 
@@ -92,6 +104,12 @@ El cociente es `Cluster/Local`; valores mayores a 1 indican que el cluster demor
 | scene_many.txt | 15.39x          | 8.00x           |
 
 El crecimiento observado es consistente con el costo esperado O(W*H*N*D*K). De `small` a `medium` se cuadruplica la resolucion y N pasa de 32 a 128, por lo que se espera cerca de 16x. De `medium` a `large` la resolucion vuelve a crecer 4x y N se duplica, por lo que se espera cerca de 8x.
+
+**Respuesta directa a las preguntas de la parte (a):**
+
+- *¿En cuanto crece el tiempo al duplicar la resolucion?* Cerca de **4x**. La resolucion entra como `W*H`: si se duplican ambas dimensiones, el numero total de pixeles se multiplica por 4 y el costo de path tracing es lineal en el numero de pixeles, porque cada pixel es un trabajo independiente. Se verifica en las mediciones: la transicion `small -> medium` cuadruplica resolucion *y* cuadruplica N (32 -> 128), dando ~16x = 4 (resolucion) x 4 (N).
+- *¿Y al duplicar N?* Cerca de **2x**. N es el numero de caminos por pixel y entra linealmente en el costo (`O(W*H*N*D*K)`): duplicar N lanza el doble de caminos por pixel, por lo que el tiempo se duplica. Se verifica en `medium -> large`: la resolucion se cuadruplica y N se duplica (128 -> 256), dando ~8x = 4 x 2.
+- *Justificacion:* el path tracer pasa la mayor parte del tiempo trazando rayos. Cada rayo cuesta `O(D*K)` por las intersecciones con K objetos y D rebotes maximos, y el numero total de rayos es `W*H*N`. La terminacion anticipada por `throughput < 0.01` y por cache hacen que los factores sean ligeramente menores a los predichos (15.87x en vez de 16x; 8.04x en vez de 8x), pero los ordenes coinciden.
 
 ## Barrido de scheduling OpenMP
 
@@ -265,77 +283,108 @@ En Cluster, Numba fue mas rapido que OpenMP en 24 de 24 puntos comparables. El c
 
 La eficiencia cae al aumentar p por overhead de planificacion, barreras implicitas, sincronizacion, presion de cache y saturacion de recursos compartidos. Aunque el cluster tiene mas cores fisicos, estas corridas solo usan hasta 8 threads, por lo que no aprovechan los 20 cores fisicos completos del nodo.
 
+**Respuesta directa a las preguntas de la parte (e):**
+
+- *¿Cual escala mejor?* **Numba escala ligeramente mejor que OpenMP**: en Local Numba gana en 19/24 puntos comparables y en Cluster en 24/24, con cociente promedio `T_OpenMP/T_Numba` de 1.13x (Local) y 1.24x (Cluster). Esto se debe principalmente a que Numba aplica LLVM con vectorizacion agresiva y al binding propio de hilos que mantiene mejor afinidad de cache; aun asi, ambas implementaciones tienen curvas de speedup paralelas, dado que el algoritmo es el mismo.
+- *¿A partir de que numero de threads decae la eficiencia?* La eficiencia ya cae desde **p=2** (E suele bajar de 1.0 a 0.85-0.95 al pasar de p=1 a p=2). El **quiebre marcado** ocurre en **p=8** en los equipos Local y Grupo (E pasa de ~0.92 en p=4 a ~0.50-0.65 en p=8) porque ambos tienen **6 cores fisicos**: los threads 7 y 8 se ejecutan en cores con Hyper-Threading que comparten unidades funcionales con los primeros 6 threads, asi que aportan menos trabajo paralelo real. En el Cluster (20 cores fisicos) el quiebre no se observa hasta p=8 tampoco, pero esta a otro nivel: alli la caida se explica por mayor latencia de memoria NUMA (dos sockets) y contencion del nodo compartido.
+- *¿A que se debe la caida?* Combinacion de: (1) **SMT/Hyper-Threading**: dos threads logicos por core fisico comparten ALU/FPU/cache L1-L2, asi que el segundo thread por core no duplica el throughput; (2) **fork-join overhead**: cada region `parallel for` paga sincronizacion al inicio y al final; (3) **contencion de cache L3**: mas threads compitiendo por el mismo cache; (4) en `large`, **saturacion del ancho de banda de memoria**, porque el array `pixels` no cabe en cache y hay accesos coalescidos en lectura/escritura.
+
 ## Comparacion entre computadores
 
 La comparacion usa p=8 para las implementaciones paralelas. El cociente es `Cluster/Local`; valores mayores a 1 indican que el cluster demoro mas que el equipo local. La columna del computador de grupo queda preparada para completar despues.
 
 ### OpenMP p=8
 
-| Escena         | Config. | Local T8 | Cluster T8 | Cluster/Local | Mas rapido actual | Grupo T8  |
-| -------------- | ------- | -------- | ---------- | ------------- | ----------------- | --------- |
-| scene.txt      | small   | 0.765    | 1.269      | 1.66x         | Local             | Pendiente |
-| scene.txt      | medium  | 15.464   | 19.699     | 1.27x         | Local             | Pendiente |
-| scene.txt      | large   | 112.857  | 157.145    | 1.39x         | Local             | Pendiente |
-| scene_many.txt | small   | 1.251    | 2.380      | 1.90x         | Local             | Pendiente |
-| scene_many.txt | medium  | 22.855   | 37.521     | 1.64x         | Local             | Pendiente |
-| scene_many.txt | large   | 182.725  | 298.016    | 1.63x         | Local             | Pendiente |
+| Escena         | Config. | Local T8 | Cluster T8 | Grupo T8 | Cluster/Local | Grupo/Local | Mas rapido |
+| -------------- | ------- | -------- | ---------- | -------- | ------------- | ----------- | ---------- |
+| scene.txt      | small   | 0.765    | 1.269      | 0.720    | 1.66x         | 0.94x       | Grupo      |
+| scene.txt      | medium  | 15.464   | 19.699     | 13.320   | 1.27x         | 0.86x       | Grupo      |
+| scene.txt      | large   | 112.857  | 157.145    | 158.678  | 1.39x         | 1.41x       | Local      |
+| scene_many.txt | small   | 1.251    | 2.380      | 3.341    | 1.90x         | 2.67x       | Local      |
+| scene_many.txt | medium  | 22.855   | 37.521     | 25.485   | 1.64x         | 1.12x       | Local      |
+| scene_many.txt | large   | 182.725  | 298.016    | 215.079  | 1.63x         | 1.18x       | Local      |
 
 ### Numba p=8
 
-| Escena         | Config. | Local T8 | Cluster T8 | Cluster/Local | Mas rapido actual | Grupo T8  |
-| -------------- | ------- | -------- | ---------- | ------------- | ----------------- | --------- |
-| scene.txt      | small   | 0.659    | 1.084      | 1.65x         | Local             | Pendiente |
-| scene.txt      | medium  | 12.602   | 16.977     | 1.35x         | Local             | Pendiente |
-| scene.txt      | large   | 102.854  | 135.203    | 1.31x         | Local             | Pendiente |
-| scene_many.txt | small   | 1.298    | 2.013      | 1.55x         | Local             | Pendiente |
-| scene_many.txt | medium  | 23.217   | 31.523     | 1.36x         | Local             | Pendiente |
-| scene_many.txt | large   | 185.490  | 252.487    | 1.36x         | Local             | Pendiente |
+| Escena         | Config. | Local T8 | Cluster T8 | Grupo T8 | Cluster/Local | Grupo/Local | Mas rapido |
+| -------------- | ------- | -------- | ---------- | -------- | ------------- | ----------- | ---------- |
+| scene.txt      | small   | 0.659    | 1.084      | 0.867    | 1.65x         | 1.32x       | Local      |
+| scene.txt      | medium  | 12.602   | 16.977     | 11.929   | 1.35x         | 0.95x       | Grupo      |
+| scene.txt      | large   | 102.854  | 135.203    | 169.868  | 1.31x         | 1.65x       | Local      |
+| scene_many.txt | small   | 1.298    | 2.013      | 3.202    | 1.55x         | 2.47x       | Local      |
+| scene_many.txt | medium  | 23.217   | 31.523     | 25.598   | 1.36x         | 1.10x       | Local      |
+| scene_many.txt | large   | 185.490  | 252.487    | 183.132  | 1.36x         | 0.99x       | Grupo      |
 
-En estas mediciones el equipo local fue mas rapido en todos los puntos p=8, pese a tener menos cores fisicos. Esto es plausible porque la comparacion limita p a 8, no a la capacidad total del cluster; ademas, el Xeon Silver 4210R tiene menor frecuencia base y el trabajo puede depender de rendimiento por thread, cache, politicas de frecuencia, contencion del nodo y overhead del entorno. El cluster sigue siendo valido como segundo computador porque entrega otra arquitectura y otra configuracion de cores/threads para comparar.
+El equipo Local (i7-9750H movil) y el equipo Grupo (i5-10600K desktop) tienen ambos 6 cores fisicos y 12 threads logicos, pero las medidas no muestran una ventaja consistente de uno sobre otro. El Grupo gana en configs pequenas/medias de `scene.txt` (mayor frecuencia base, 4.10 GHz) pero pierde en `scene.txt large` y `scene_many.txt small`. El Cluster Xeon Silver 4210R queda detras en p=8 porque la comparacion limita el paralelismo a 8 (su ventaja real esta en aprovechar sus 20 cores fisicos), tiene menor frecuencia base y sufre contencion compartida con otros usuarios del nodo.
 
-## Espacio para computador adicional del grupo
+## Computador adicional del grupo
 
-Completar esta seccion cuando otro integrante ejecute `python3 src/run_experiments.py --full --reps 1 --pdf --outdir "results/full_grupo_<nombre>"`. No inventar valores: copiar desde su `hardware.json` y `results.csv`.
+Los datos siguientes provienen de la corrida `--full --reps 1` ejecutada por
+jean-Philipe Fuentes en su equipo desktop. Carpeta original con CSV, hardware,
+plots y report: `results/full_grupo_jeanf_20260514_105212/`.
 
-### Hardware pendiente
+### Hardware
 
-| Dato                 | Valor            |
-| -------------------- | ---------------- |
-| Integrante           | ________________ |
-| Procesador           | ________________ |
-| Cores fisicos        | ________________ |
-| Threads logicos      | ________________ |
-| Threads por core     | ________________ |
-| Frecuencia / max MHz | ________________ |
-| Sistema operativo    | ________________ |
+| Dato                 | Valor                                              |
+| -------------------- | -------------------------------------------------- |
+| Integrante           | jean-Philipe Fuentes (jhfuentes@uc.cl)             |
+| Procesador           | Intel(R) Core(TM) i5-10600K CPU @ 4.10GHz          |
+| Cores fisicos        | 6                                                  |
+| Threads logicos      | 12                                                 |
+| Threads por core     | 2                                                  |
+| Frecuencia / max MHz | 4100 MHz base (max turbo 4800 MHz, no reportado por WSL) |
+| Sistema operativo    | Ubuntu 24.04.2 LTS sobre WSL2 (kernel 5.15.167.4)  |
 
-### Resultados seriales pendientes
+### Resultados seriales (Grupo)
 
 | Escena         | Config. | serial.cpp | serial_pt.cpp |
 | -------------- | ------- | ---------- | ------------- |
-| scene.txt      | small   | ____       | ____          |
-| scene.txt      | medium  | ____       | ____          |
-| scene.txt      | large   | ____       | ____          |
-| scene_many.txt | small   | ____       | ____          |
-| scene_many.txt | medium  | ____       | ____          |
-| scene_many.txt | large   | ____       | ____          |
+| scene.txt      | small   | 0.090      | 5.025         |
+| scene.txt      | medium  | 1.775      | 73.510        |
+| scene.txt      | large   | 6.486      | 621.377       |
+| scene_many.txt | small   | 0.357      | 7.216         |
+| scene_many.txt | medium  | 4.204      | 121.263       |
+| scene_many.txt | large   | 17.734     | 926.600       |
 
-### OpenMP y Numba p=8 pendientes
+Crecimientos serial_pt observados en el equipo Grupo:
 
-| Escena         | Config. | OMP T8 | OMP S8 | OMP E8 | Numba T8 | Numba S8 | Numba E8 | Mejor |
-| -------------- | ------- | ------ | ------ | ------ | -------- | -------- | -------- | ----- |
-| scene.txt      | small   | ____   | ____   | ____   | ____     | ____     | ____     | ____  |
-| scene.txt      | medium  | ____   | ____   | ____   | ____     | ____     | ____     | ____  |
-| scene.txt      | large   | ____   | ____   | ____   | ____     | ____     | ____     | ____  |
-| scene_many.txt | small   | ____   | ____   | ____   | ____     | ____     | ____     | ____  |
-| scene_many.txt | medium  | ____   | ____   | ____   | ____     | ____     | ____     | ____  |
-| scene_many.txt | large   | ____   | ____   | ____   | ____     | ____     | ____     | ____  |
+| Escena         | small -> medium | medium -> large |
+| -------------- | --------------- | --------------- |
+| scene.txt      | 14.63x          | 8.45x           |
+| scene_many.txt | 16.81x          | 7.64x           |
 
-### Comparacion pendiente con Local y Cluster
+Coincide con lo esperado: ~16x cuando se cuadruplica resolucion y N pasa de 32 a 128 (small->medium); ~8x cuando solo se duplica N pero la resolucion vuelve a crecer 4x (medium->large). Los factores ligeramente bajo 16x se explican por terminacion anticipada del path tracer y efectos de cache.
 
-- Diferencias mas notables: ________________________________________________
-- Posibles causas: _________________________________________________________
-- Efecto de cores/threads/frecuencia/cache: _______________________________
+### OpenMP y Numba p=8 (Grupo)
+
+Schedule elegido por el script para la fase compare: `dynamic:8` para `scene.txt`, `dynamic:32` para `scene_many.txt` (mismas elecciones que el equipo Local).
+
+| Escena         | Config. | OMP T8 | OMP S8 | OMP E8 | Numba T8 | Numba S8 | Numba E8 | Mejor  |
+| -------------- | ------- | ------ | ------ | ------ | -------- | -------- | -------- | ------ |
+| scene.txt      | small   | 0.72   | 6.98   | 0.87   | 0.87     | 5.80     | 0.72     | OpenMP |
+| scene.txt      | medium  | 13.32  | 5.52   | 0.69   | 11.93    | 6.16     | 0.77     | Numba  |
+| scene.txt      | large   | 158.68 | 3.92   | 0.49   | 169.87   | 3.66     | 0.46     | OpenMP |
+| scene_many.txt | small   | 3.34   | 2.16   | 0.27   | 3.20     | 2.25     | 0.28     | Numba  |
+| scene_many.txt | medium  | 25.49  | 4.76   | 0.59   | 25.60    | 4.74     | 0.59     | OpenMP |
+| scene_many.txt | large   | 215.08 | 4.31   | 0.54   | 183.13   | 5.06     | 0.63     | Numba  |
+
+OpenMP y Numba tienen rendimiento muy parejo: el ganador alterna entre configs. Esto era esperable porque ambos comparten kernel C-equivalente (Numba via LLVM, OpenMP via g++ con `-O2`), comparten el mismo patron de paralelizacion (loop sobre pixeles) y semillas locales por pixel. La eficiencia E8 cae notoriamente en `small` (donde el overhead de fork/join domina sobre el trabajo) y en `large` (donde el 7mo y 8vo thread caen en cores hyperthreaded del i5-10600K, que solo tiene 6 cores fisicos: SMT no duplica throughput porque ambos hilos comparten unidades funcionales).
+
+### Comparacion con Local y Cluster
+
+- **Diferencias mas notables**:
+  - En la fase serial, el equipo Grupo (i5-10600K @ 4.10 GHz desktop) fue ~14-24% mas lento que el equipo Local (i7-9750H @ 2.60 GHz movil), pese a tener mayor frecuencia base y misma cantidad de cores fisicos. Era el resultado contrario al esperado por especificaciones.
+  - El Cluster (Xeon Silver 4210R @ 2.40 GHz) es ~52-85% mas lento que el equipo Local en serial: mayor latencia por core, contencion del nodo y menor turbo.
+  - En p=8 los tres computadores estan mas cerca, pero el Grupo sigue siendo competitivo solo en configs medianas; en `large` y en `scene_many small` queda detras del Local (hasta 2.67x mas lento en `scene_many small` OpenMP).
+- **Posibles causas**:
+  - Ejecucion bajo WSL2 introduce overhead de virtualizacion (capa Hyper-V) que penaliza el rendimiento serial.
+  - Durante la corrida habia procesos concurrentes (Claude Code, IDE, otros agentes) consumiendo CPU: la columna "CPU max MHz" no fue reportada por `lscpu` dentro de WSL, lo que sugiere que las politicas de frecuencia no son visibles desde el guest y el turbo puede estar limitado.
+  - El i7-9750H del equipo Local probablemente corrio bajo Linux nativo o WSL con menos contencion, aprovechando mejor su turbo de hasta 4.50 GHz.
+- **Efecto de cores/threads/frecuencia/cache**:
+  - El Cluster tiene 20 cores fisicos / 40 threads, pero limitar p=8 desperdicia su capacidad: a p=20 deberia escalar mucho mejor.
+  - El i5-10600K y el i7-9750H tienen ambos 6 cores fisicos, por lo que la curva de speedup ideal coincide; el techo real es ~6x porque el SMT del 7mo-12vo thread no agrega trabajo paralelo real.
+  - La cache L3 del i5-10600K es 12 MiB, igual que el i7-9750H; el Cluster tiene 27.5 MiB de L3 pero compartidos entre 20 cores: por core efectivo es menor.
+  - La escena `scene_many.txt` con 40 esferas amplifica las diferencias de cache y de frecuencia por core porque cada rayo evalua mas intersecciones; en el Cluster esto se traduce en 1.80x mas tiempo serial que el Local.
 
 ## Graficos
 
@@ -449,8 +498,63 @@ Los graficos siguientes fueron generados por el mismo script desde cada `results
 
 ![Cluster: Eficiencia scene_many.txt large](cluster/plots/efficiency_scene_many_large.png)
 
+### Grupo (i5-10600K)
+
+![Grupo: Scheduling scene.txt](grupo/plots/schedule_scene.png)
+
+![Grupo: Scheduling scene_many.txt](grupo/plots/schedule_scene_many.png)
+
+### Grupo - scene.txt small
+
+![Grupo: Tiempo scene.txt small](grupo/plots/time_scene_small.png)
+
+![Grupo: Speedup scene.txt small](grupo/plots/speedup_scene_small.png)
+
+![Grupo: Eficiencia scene.txt small](grupo/plots/efficiency_scene_small.png)
+
+### Grupo - scene.txt medium
+
+![Grupo: Tiempo scene.txt medium](grupo/plots/time_scene_medium.png)
+
+![Grupo: Speedup scene.txt medium](grupo/plots/speedup_scene_medium.png)
+
+![Grupo: Eficiencia scene.txt medium](grupo/plots/efficiency_scene_medium.png)
+
+### Grupo - scene.txt large
+
+![Grupo: Tiempo scene.txt large](grupo/plots/time_scene_large.png)
+
+![Grupo: Speedup scene.txt large](grupo/plots/speedup_scene_large.png)
+
+![Grupo: Eficiencia scene.txt large](grupo/plots/efficiency_scene_large.png)
+
+### Grupo - scene_many.txt small
+
+![Grupo: Tiempo scene_many.txt small](grupo/plots/time_scene_many_small.png)
+
+![Grupo: Speedup scene_many.txt small](grupo/plots/speedup_scene_many_small.png)
+
+![Grupo: Eficiencia scene_many.txt small](grupo/plots/efficiency_scene_many_small.png)
+
+### Grupo - scene_many.txt medium
+
+![Grupo: Tiempo scene_many.txt medium](grupo/plots/time_scene_many_medium.png)
+
+![Grupo: Speedup scene_many.txt medium](grupo/plots/speedup_scene_many_medium.png)
+
+![Grupo: Eficiencia scene_many.txt medium](grupo/plots/efficiency_scene_many_medium.png)
+
+### Grupo - scene_many.txt large
+
+![Grupo: Tiempo scene_many.txt large](grupo/plots/time_scene_many_large.png)
+
+![Grupo: Speedup scene_many.txt large](grupo/plots/speedup_scene_many_large.png)
+
+![Grupo: Eficiencia scene_many.txt large](grupo/plots/efficiency_scene_many_large.png)
+
 ## Archivos de respaldo
 
 - Resultados locales completos: `results/final/local/results.csv`, `hardware.json`, `report.md`, `report.pdf` y `plots/`.
 - Resultados cluster completos: `results/final/cluster/results.csv`, `hardware.json`, `report.md`, `report.pdf`, logs `slurm_2289.out` y `slurm_2289.err`, y `plots/`.
-- Informe con espacio para grupo: `results/final/informe_entrega_grupo.md` y `results/final/informe_entrega_grupo.pdf`.
+- Resultados grupo (i5-10600K) completos: `results/final/grupo/results.csv`, `hardware.json`, `report.md`, `report.pdf` y `plots/`. Corrida original en `results/full_grupo_jeanf_20260514_105212/`.
+- Informe final del grupo: `results/final/informe_entrega_grupo.md` y `results/final/informe_entrega_grupo.pdf`.
