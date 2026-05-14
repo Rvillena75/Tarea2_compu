@@ -6,6 +6,9 @@ Uso rapido para verificar:
 
 Uso completo sugerido para la entrega:
     python3 run_experiments.py --full --reps 3 --pdf
+
+Solo Numba sobre un directorio existente:
+    python3 run_experiments.py --full --only-numba --merge-existing --pdf --outdir results/full_local_...
 """
 
 from __future__ import annotations
@@ -52,13 +55,29 @@ def parse_args() -> argparse.Namespace:
                         help="repeticiones por punto; se reporta el minimo")
     parser.add_argument("--outdir", type=Path, default=None,
                         help="directorio de resultados")
+    parser.add_argument("--skip-serial", action="store_true",
+                        help="omite referencias seriales")
+    parser.add_argument("--skip-openmp", action="store_true",
+                        help="omite barrido y comparacion OpenMP")
     parser.add_argument("--skip-numba", action="store_true",
                         help="omite experimentos Numba")
+    parser.add_argument("--only-numba", action="store_true",
+                        help="atajo para --skip-serial --skip-openmp")
+    parser.add_argument("--merge-existing", action="store_true",
+                        help="mezcla con results.csv existente en --outdir")
     parser.add_argument("--save-images", action="store_true",
                         help="guarda PPM de cada corrida; por defecto solo mide tiempos")
     parser.add_argument("--pdf", action="store_true",
                         help="intenta convertir report.md a PDF con pandoc")
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.only_numba:
+        if args.skip_numba:
+            parser.error("--only-numba no se puede combinar con --skip-numba")
+        args.skip_serial = True
+        args.skip_openmp = True
+    if args.skip_serial and args.skip_openmp and args.skip_numba:
+        parser.error("no queda ninguna fase para ejecutar")
+    return args
 
 
 def command_text(cmd: list[str]) -> str:
@@ -286,35 +305,40 @@ def choose_best_schedule(records: list[dict[str, object]], scene: str,
 
 def run_compare(records: list[dict[str, object]], outdir: Path, cfgs: list[Config],
                 scene_names: list[str], threads: list[int], reps: int,
-                skip_numba: bool, save_images: bool) -> None:
-    best_by_scene = {
-        scene: choose_best_schedule(records, scene, "medium" if cfgs[-1].name != "quick2" else "quick")
-        for scene in scene_names
-    }
+                skip_openmp: bool, skip_numba: bool, save_images: bool) -> None:
+    best_by_scene: dict[str, tuple[str, int]] = {}
+    if not skip_openmp:
+        best_by_scene = {
+            scene: choose_best_schedule(records, scene, "medium" if cfgs[-1].name != "quick2" else "quick")
+            for scene in scene_names
+        }
     numba_ok = (not skip_numba) and have_numba()
     if not numba_ok and not skip_numba:
         print("Aviso: numba no esta instalado; se omiten corridas numba.", file=sys.stderr)
+        if skip_openmp:
+            raise RuntimeError("Se pidio correr solo Numba, pero numba no esta instalado.")
 
     for scene in scene_names:
-        schedule, chunk = best_by_scene[scene]
+        schedule, chunk = best_by_scene.get(scene, ("static", 1))
         for cfg in cfgs:
             for p in threads:
-                out = output_path(outdir, "omp_best", scene, cfg.name, p, schedule, chunk, save_images)
-                seconds, text = run_best_of(
-                    ["./omp_pt_sched", scene, str(out), str(cfg.width), str(cfg.height),
-                     str(cfg.depth), str(cfg.samples), str(p), schedule, str(chunk)],
-                    reps,
-                    env={"OMP_NUM_THREADS": str(p), "OMP_DYNAMIC": "FALSE"},
-                )
-                parsed = parse_result(text)
-                active_schedule = parsed[6] if parsed else schedule
-                active_chunk = parsed[7] if parsed else chunk
-                add_record(
-                    records, phase="compare", impl="openmp_best", scene=scene,
-                    config=cfg.name, width=cfg.width, height=cfg.height,
-                    depth=cfg.depth, samples=cfg.samples, threads=p,
-                    schedule=active_schedule, chunk=active_chunk, seconds=seconds,
-                )
+                if not skip_openmp:
+                    out = output_path(outdir, "omp_best", scene, cfg.name, p, schedule, chunk, save_images)
+                    seconds, text = run_best_of(
+                        ["./omp_pt_sched", scene, str(out), str(cfg.width), str(cfg.height),
+                         str(cfg.depth), str(cfg.samples), str(p), schedule, str(chunk)],
+                        reps,
+                        env={"OMP_NUM_THREADS": str(p), "OMP_DYNAMIC": "FALSE"},
+                    )
+                    parsed = parse_result(text)
+                    active_schedule = parsed[6] if parsed else schedule
+                    active_chunk = parsed[7] if parsed else chunk
+                    add_record(
+                        records, phase="compare", impl="openmp_best", scene=scene,
+                        config=cfg.name, width=cfg.width, height=cfg.height,
+                        depth=cfg.depth, samples=cfg.samples, threads=p,
+                        schedule=active_schedule, chunk=active_chunk, seconds=seconds,
+                    )
 
                 if numba_ok:
                     out = output_path(outdir, "numba", scene, cfg.name, p, "prange", 0, save_images)
@@ -348,6 +372,24 @@ def write_csv(path: Path, records: list[dict[str, object]]) -> None:
         writer.writeheader()
         for row in records:
             writer.writerow({field: row[field] for field in fields})
+
+
+def row_key(row: dict[str, object]) -> tuple[str, ...]:
+    fields = (
+        "phase", "impl", "scene", "config", "width", "height", "depth",
+        "samples", "threads", "schedule", "chunk",
+    )
+    return tuple(str(row[field]) for field in fields)
+
+
+def merge_existing_records(csv_path: Path, records: list[dict[str, object]]) -> list[dict[str, object]]:
+    if not csv_path.exists():
+        return records
+    existing: list[dict[str, object]] = load_csv(csv_path)
+    new_keys = {row_key(row) for row in records}
+    merged = [row for row in existing if row_key(row) not in new_keys]
+    merged.extend(records)
+    return merged
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
@@ -654,7 +696,8 @@ def main() -> int:
     print(f"Directorio de resultados: {outdir}")
     print(f"Modo: {'quick' if quick else 'full'}, reps={reps}")
 
-    build()
+    if not args.skip_serial or not args.skip_openmp:
+        build()
     info = hardware_info()
     (outdir / "hardware.json").write_text(json.dumps(info, indent=2, ensure_ascii=False), encoding="utf-8")
 
@@ -664,12 +707,18 @@ def main() -> int:
     schedules = schedule_values(quick)
     records: list[dict[str, object]] = []
 
-    run_serials(records, outdir, cfgs, scene_names, reps, args.save_images)
-    medium_cfg = cfgs[0] if quick else next(c for c in cfgs if c.name == "medium")
-    run_schedule_sweep(records, outdir, medium_cfg, scene_names, threads, schedules, reps, args.save_images)
-    run_compare(records, outdir, cfgs, scene_names, threads, reps, args.skip_numba, args.save_images)
-
     csv_path = outdir / "results.csv"
+    if not args.skip_serial:
+        run_serials(records, outdir, cfgs, scene_names, reps, args.save_images)
+    if not args.skip_openmp:
+        medium_cfg = cfgs[0] if quick else next(c for c in cfgs if c.name == "medium")
+        run_schedule_sweep(records, outdir, medium_cfg, scene_names, threads, schedules, reps, args.save_images)
+    run_compare(
+        records, outdir, cfgs, scene_names, threads, reps,
+        args.skip_openmp, args.skip_numba, args.save_images,
+    )
+    if args.merge_existing:
+        records = merge_existing_records(csv_path, records)
     write_csv(csv_path, records)
     plots = maybe_plots(outdir, csv_path)
     report = write_report(outdir, csv_path, plots, info, not args.skip_numba, quick)

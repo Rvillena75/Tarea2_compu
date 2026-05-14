@@ -1,0 +1,215 @@
+Fecha inicio:
+Wed May 13 16:57:51 -04 2026
+Nodo:
+yodaxico
+Hardware:
+Architecture:                            x86_64
+CPU op-mode(s):                          32-bit, 64-bit
+Address sizes:                           46 bits physical, 48 bits virtual
+Byte Order:                              Little Endian
+CPU(s):                                  40
+On-line CPU(s) list:                     0-39
+Vendor ID:                               GenuineIntel
+Model name:                              Intel(R) Xeon(R) Silver 4210R CPU @ 2.40GHz
+CPU family:                              6
+Model:                                   85
+Thread(s) per core:                      2
+Core(s) per socket:                      10
+Socket(s):                               2
+Stepping:                                7
+CPU max MHz:                             3200.0000
+CPU min MHz:                             1000.0000
+BogoMIPS:                                4800.00
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 cdp_l3 invpcid_single intel_ppin ssbd mba ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm mpx rdt_a avx512f avx512dq rdseed adx smap clflushopt clwb intel_pt avx512cd avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local dtherm ida arat pln pts hwp hwp_act_window hwp_epp hwp_pkg_req pku ospke avx512_vnni md_clear flush_l1d arch_capabilities ibpb_exit_to_user
+Virtualization:                          VT-x
+L1d cache:                               640 KiB (20 instances)
+L1i cache:                               640 KiB (20 instances)
+L2 cache:                                20 MiB (20 instances)
+L3 cache:                                27.5 MiB (2 instances)
+NUMA node(s):                            2
+NUMA node0 CPU(s):                       0-9,20-29
+NUMA node1 CPU(s):                       10-19,30-39
+Vulnerability Gather data sampling:      Mitigation; Microcode
+Vulnerability Indirect target selection: Mitigation; Aligned branch/return thunks
+Vulnerability Itlb multihit:             KVM: Mitigation: VMX disabled
+Vulnerability L1tf:                      Not affected
+Vulnerability Mds:                       Not affected
+Vulnerability Meltdown:                  Not affected
+Vulnerability Mmio stale data:           Mitigation; Clear CPU buffers; SMT vulnerable
+Vulnerability Reg file data sampling:    Not affected
+Vulnerability Retbleed:                  Mitigation; Enhanced IBRS
+Vulnerability Spec rstack overflow:      Not affected
+Vulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl and seccomp
+Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop
+Vulnerability Srbds:                     Not affected
+Vulnerability Tsa:                       Not affected
+Vulnerability Tsx async abort:           Mitigation; TSX disabled
+Vulnerability Vmscape:                   Mitigation; IBPB before exit to userspace
+Python:
+Python 3.10.12
+numpy 2.2.6
+numba 0.65.1
+matplotlib 3.10.9
+Compilando:
+g++ -std=c++17 -O2 -Wall -Wextra -o serial serial.cpp
+g++ -std=c++17 -O2 -Wall -Wextra -o serial_pt serial_pt.cpp
+g++ -std=c++17 -O2 -Wall -Wextra -fopenmp -o omp_pt omp_pt.cpp
+g++ -std=c++17 -O2 -Wall -Wextra -fopenmp -o omp_pt_sched omp_pt_sched.cpp
+Ejecutando experimentos completos:
+Directorio de resultados: results/full_cluster_2289
+Modo: full, reps=1
+make: Nothing to be done for 'all'.
+   serial serial_rt    scene.txt      small    p=1  serial:0 0.129249s
+   serial serial_pt    scene.txt      small    p=1  serial:0 6.442810s
+   serial serial_rt    scene.txt      medium   p=1  serial:0 1.791990s
+   serial serial_pt    scene.txt      medium   p=1  serial:0 100.985000s
+   serial serial_rt    scene.txt      large    p=1  serial:0 7.550420s
+   serial serial_pt    scene.txt      large    p=1  serial:0 811.762000s
+   serial serial_rt    scene_many.txt small    p=1  serial:0 0.375928s
+   serial serial_pt    scene_many.txt small    p=1  serial:0 11.424400s
+   serial serial_rt    scene_many.txt medium   p=1  serial:0 6.261570s
+   serial serial_pt    scene_many.txt medium   p=1  serial:0 175.809000s
+   serial serial_rt    scene_many.txt large    p=1  serial:0 25.112500s
+   serial serial_pt    scene_many.txt large    p=1  serial:0 1406.140000s
+ schedule omp_pt_sched scene.txt      medium   p=1  static:1 103.586000s
+ schedule omp_pt_sched scene.txt      medium   p=1  static:8 103.152000s
+ schedule omp_pt_sched scene.txt      medium   p=1  static:32 103.362000s
+ schedule omp_pt_sched scene.txt      medium   p=1  static:128 102.943000s
+ schedule omp_pt_sched scene.txt      medium   p=1  dynamic:1 103.230000s
+ schedule omp_pt_sched scene.txt      medium   p=1  dynamic:8 103.170000s
+ schedule omp_pt_sched scene.txt      medium   p=1  dynamic:32 102.952000s
+ schedule omp_pt_sched scene.txt      medium   p=1  dynamic:128 101.612000s
+ schedule omp_pt_sched scene.txt      medium   p=1  guided:1 101.302000s
+ schedule omp_pt_sched scene.txt      medium   p=1  guided:8 103.465000s
+ schedule omp_pt_sched scene.txt      medium   p=1  guided:32 101.425000s
+ schedule omp_pt_sched scene.txt      medium   p=2  static:1 52.939900s
+ schedule omp_pt_sched scene.txt      medium   p=2  static:8 53.001600s
+ schedule omp_pt_sched scene.txt      medium   p=2  static:32 52.823800s
+ schedule omp_pt_sched scene.txt      medium   p=2  static:128 52.976400s
+ schedule omp_pt_sched scene.txt      medium   p=2  dynamic:1 52.506300s
+ schedule omp_pt_sched scene.txt      medium   p=2  dynamic:8 52.714600s
+ schedule omp_pt_sched scene.txt      medium   p=2  dynamic:32 53.045900s
+ schedule omp_pt_sched scene.txt      medium   p=2  dynamic:128 52.347000s
+ schedule omp_pt_sched scene.txt      medium   p=2  guided:1 52.964000s
+ schedule omp_pt_sched scene.txt      medium   p=2  guided:8 53.064500s
+ schedule omp_pt_sched scene.txt      medium   p=2  guided:32 53.109400s
+ schedule omp_pt_sched scene.txt      medium   p=4  static:1 27.621600s
+ schedule omp_pt_sched scene.txt      medium   p=4  static:8 27.661900s
+ schedule omp_pt_sched scene.txt      medium   p=4  static:32 27.814500s
+ schedule omp_pt_sched scene.txt      medium   p=4  static:128 27.606900s
+ schedule omp_pt_sched scene.txt      medium   p=4  dynamic:1 27.586800s
+ schedule omp_pt_sched scene.txt      medium   p=4  dynamic:8 27.686500s
+ schedule omp_pt_sched scene.txt      medium   p=4  dynamic:32 27.571800s
+ schedule omp_pt_sched scene.txt      medium   p=4  dynamic:128 27.575600s
+ schedule omp_pt_sched scene.txt      medium   p=4  guided:1 27.565500s
+ schedule omp_pt_sched scene.txt      medium   p=4  guided:8 27.569600s
+ schedule omp_pt_sched scene.txt      medium   p=4  guided:32 27.533400s
+ schedule omp_pt_sched scene.txt      medium   p=8  static:1 19.619500s
+ schedule omp_pt_sched scene.txt      medium   p=8  static:8 19.653300s
+ schedule omp_pt_sched scene.txt      medium   p=8  static:32 19.737900s
+ schedule omp_pt_sched scene.txt      medium   p=8  static:128 19.770600s
+ schedule omp_pt_sched scene.txt      medium   p=8  dynamic:1 19.555900s
+ schedule omp_pt_sched scene.txt      medium   p=8  dynamic:8 19.706700s
+ schedule omp_pt_sched scene.txt      medium   p=8  dynamic:32 19.628900s
+ schedule omp_pt_sched scene.txt      medium   p=8  dynamic:128 19.710800s
+ schedule omp_pt_sched scene.txt      medium   p=8  guided:1 19.694600s
+ schedule omp_pt_sched scene.txt      medium   p=8  guided:8 19.686500s
+ schedule omp_pt_sched scene.txt      medium   p=8  guided:32 19.705800s
+ schedule omp_pt_sched scene_many.txt medium   p=1  static:1 179.688000s
+ schedule omp_pt_sched scene_many.txt medium   p=1  static:8 179.374000s
+ schedule omp_pt_sched scene_many.txt medium   p=1  static:32 179.383000s
+ schedule omp_pt_sched scene_many.txt medium   p=1  static:128 179.556000s
+ schedule omp_pt_sched scene_many.txt medium   p=1  dynamic:1 169.603000s
+ schedule omp_pt_sched scene_many.txt medium   p=1  dynamic:8 179.371000s
+ schedule omp_pt_sched scene_many.txt medium   p=1  dynamic:32 179.575000s
+ schedule omp_pt_sched scene_many.txt medium   p=1  dynamic:128 179.048000s
+ schedule omp_pt_sched scene_many.txt medium   p=1  guided:1 178.066000s
+ schedule omp_pt_sched scene_many.txt medium   p=1  guided:8 169.697000s
+ schedule omp_pt_sched scene_many.txt medium   p=1  guided:32 179.484000s
+ schedule omp_pt_sched scene_many.txt medium   p=2  static:1 92.056800s
+ schedule omp_pt_sched scene_many.txt medium   p=2  static:8 92.156100s
+ schedule omp_pt_sched scene_many.txt medium   p=2  static:32 92.271200s
+ schedule omp_pt_sched scene_many.txt medium   p=2  static:128 90.649500s
+ schedule omp_pt_sched scene_many.txt medium   p=2  dynamic:1 92.099500s
+ schedule omp_pt_sched scene_many.txt medium   p=2  dynamic:8 90.131500s
+ schedule omp_pt_sched scene_many.txt medium   p=2  dynamic:32 90.580800s
+ schedule omp_pt_sched scene_many.txt medium   p=2  dynamic:128 91.458700s
+ schedule omp_pt_sched scene_many.txt medium   p=2  guided:1 89.833400s
+ schedule omp_pt_sched scene_many.txt medium   p=2  guided:8 92.173200s
+ schedule omp_pt_sched scene_many.txt medium   p=2  guided:32 91.337200s
+ schedule omp_pt_sched scene_many.txt medium   p=4  static:1 47.938000s
+ schedule omp_pt_sched scene_many.txt medium   p=4  static:8 47.861200s
+ schedule omp_pt_sched scene_many.txt medium   p=4  static:32 47.982600s
+ schedule omp_pt_sched scene_many.txt medium   p=4  static:128 47.920800s
+ schedule omp_pt_sched scene_many.txt medium   p=4  dynamic:1 48.197700s
+ schedule omp_pt_sched scene_many.txt medium   p=4  dynamic:8 47.831900s
+ schedule omp_pt_sched scene_many.txt medium   p=4  dynamic:32 48.666500s
+ schedule omp_pt_sched scene_many.txt medium   p=4  dynamic:128 47.880000s
+ schedule omp_pt_sched scene_many.txt medium   p=4  guided:1 47.867400s
+ schedule omp_pt_sched scene_many.txt medium   p=4  guided:8 47.791000s
+ schedule omp_pt_sched scene_many.txt medium   p=4  guided:32 47.803700s
+ schedule omp_pt_sched scene_many.txt medium   p=8  static:1 37.591200s
+ schedule omp_pt_sched scene_many.txt medium   p=8  static:8 37.542700s
+ schedule omp_pt_sched scene_many.txt medium   p=8  static:32 37.606000s
+ schedule omp_pt_sched scene_many.txt medium   p=8  static:128 37.629900s
+ schedule omp_pt_sched scene_many.txt medium   p=8  dynamic:1 37.343100s
+ schedule omp_pt_sched scene_many.txt medium   p=8  dynamic:8 37.396000s
+ schedule omp_pt_sched scene_many.txt medium   p=8  dynamic:32 37.458000s
+ schedule omp_pt_sched scene_many.txt medium   p=8  dynamic:128 37.625500s
+ schedule omp_pt_sched scene_many.txt medium   p=8  guided:1 37.500700s
+ schedule omp_pt_sched scene_many.txt medium   p=8  guided:8 37.655700s
+ schedule omp_pt_sched scene_many.txt medium   p=8  guided:32 37.567600s
+  compare openmp_best  scene.txt      small    p=1  dynamic:128 6.616900s
+  compare numba_pt     scene.txt      small    p=1  prange:0 4.885835s
+  compare openmp_best  scene.txt      small    p=2  dynamic:128 3.415820s
+  compare numba_pt     scene.txt      small    p=2  prange:0 2.744184s
+  compare openmp_best  scene.txt      small    p=4  dynamic:128 1.777660s
+  compare numba_pt     scene.txt      small    p=4  prange:0 1.484349s
+  compare openmp_best  scene.txt      small    p=8  dynamic:128 1.269230s
+  compare numba_pt     scene.txt      small    p=8  prange:0 1.084230s
+  compare openmp_best  scene.txt      medium   p=1  dynamic:128 103.303000s
+  compare numba_pt     scene.txt      medium   p=1  prange:0 73.706042s
+  compare openmp_best  scene.txt      medium   p=2  dynamic:128 52.478700s
+  compare numba_pt     scene.txt      medium   p=2  prange:0 44.085470s
+  compare openmp_best  scene.txt      medium   p=4  dynamic:128 27.836600s
+  compare numba_pt     scene.txt      medium   p=4  prange:0 23.238844s
+  compare openmp_best  scene.txt      medium   p=8  dynamic:128 19.699100s
+  compare numba_pt     scene.txt      medium   p=8  prange:0 16.977437s
+  compare openmp_best  scene.txt      large    p=1  dynamic:128 822.579000s
+  compare numba_pt     scene.txt      large    p=1  prange:0 581.332042s
+  compare openmp_best  scene.txt      large    p=2  dynamic:128 421.544000s
+  compare numba_pt     scene.txt      large    p=2  prange:0 352.311262s
+  compare openmp_best  scene.txt      large    p=4  dynamic:128 219.374000s
+  compare numba_pt     scene.txt      large    p=4  prange:0 185.739256s
+  compare openmp_best  scene.txt      large    p=8  dynamic:128 157.145000s
+  compare numba_pt     scene.txt      large    p=8  prange:0 135.203175s
+  compare openmp_best  scene_many.txt small    p=1  dynamic:1 11.420600s
+  compare numba_pt     scene_many.txt small    p=1  prange:0 8.165558s
+  compare openmp_best  scene_many.txt small    p=2  dynamic:1 5.731960s
+  compare numba_pt     scene_many.txt small    p=2  prange:0 4.710695s
+  compare openmp_best  scene_many.txt small    p=4  dynamic:1 3.061580s
+  compare numba_pt     scene_many.txt small    p=4  prange:0 2.595941s
+  compare openmp_best  scene_many.txt small    p=8  dynamic:1 2.379510s
+  compare numba_pt     scene_many.txt small    p=8  prange:0 2.012933s
+  compare openmp_best  scene_many.txt medium   p=1  dynamic:1 177.196000s
+  compare numba_pt     scene_many.txt medium   p=1  prange:0 128.414949s
+  compare openmp_best  scene_many.txt medium   p=2  dynamic:1 91.865300s
+  compare numba_pt     scene_many.txt medium   p=2  prange:0 75.439223s
+  compare openmp_best  scene_many.txt medium   p=4  dynamic:1 47.580000s
+  compare numba_pt     scene_many.txt medium   p=4  prange:0 41.411138s
+  compare openmp_best  scene_many.txt medium   p=8  dynamic:1 37.521100s
+  compare numba_pt     scene_many.txt medium   p=8  prange:0 31.522765s
+  compare openmp_best  scene_many.txt large    p=1  dynamic:1 1434.800000s
+  compare numba_pt     scene_many.txt large    p=1  prange:0 1043.958627s
+  compare openmp_best  scene_many.txt large    p=2  dynamic:1 732.822000s
+  compare numba_pt     scene_many.txt large    p=2  prange:0 613.288810s
+  compare openmp_best  scene_many.txt large    p=4  dynamic:1 381.005000s
+  compare numba_pt     scene_many.txt large    p=4  prange:0 332.148715s
+  compare openmp_best  scene_many.txt large    p=8  dynamic:1 298.016000s
+  compare numba_pt     scene_many.txt large    p=8  prange:0 252.487236s
+CSV: results/full_cluster_2289/results.csv
+Informe: results/full_cluster_2289/report.md
+Fecha termino:
+Wed May 13 21:53:50 -04 2026
+Terminado job 2289
